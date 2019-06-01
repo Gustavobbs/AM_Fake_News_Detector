@@ -54,4 +54,4 @@ def regression(Xtrain, Ytrain, Xtest, lambda_reg):
 
     Ypred = predict(theta, Xtrain)
 
-    return Ypred
+    return theta, Ypred

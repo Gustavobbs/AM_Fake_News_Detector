@@ -27,4 +27,6 @@ def svmUse(Xtrain, Ytrain, Xtest, Ytest, kernel, cost, gamma):
 
     model = train(Xtrain, Ytrain, kernel, cost, gamma)
 
-    return predict(model, Xtest, Ytest)
+    Ypred = predict(model, Xtest, Ytest)
+
+    return model, Ypred
