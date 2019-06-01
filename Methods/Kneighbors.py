@@ -26,7 +26,7 @@ def knn(x, X, Y, K):
 
     return y, ind_viz
 
-def testSamples(Xtrain, Ytrain, Xtest, Ytest, K):
+def testSamples(Xtrain, Ytrain, Xtest, K):
 
     Ypred = [knn(x, Xtrain, Ytrain, K) for x in Xtest]
 
