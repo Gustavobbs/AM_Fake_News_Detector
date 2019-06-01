@@ -104,6 +104,31 @@ def build_bow():
 
     return X, Y, feature_names
 
+def stratified_kfolds(Y, k):
+    train_index = []
+    test_index = []
+    folds_final = []
+
+    for i in range(k):
+        train_index.append([])
+        test_index.append([])
+        folds_final.append([train_index[i],test_index[i]])
+
+    classes_indexes = []
+    classes_indexes.append([i for i, x in enumerate(Y==0) if x])
+    classes_indexes.append([i for i, x in enumerate(Y==1) if x])
+
+    for i in range(k):
+        for class_indexes in classes_indexes:
+            aux = class_indexes[0:int(len(class_indexes)*i/k)]
+            aux2 = class_indexes[int(len(class_indexes)*(i+1)/k):len(class_indexes)]
+            train_index[i].extend(aux + aux2)
+            test_index[i].extend(class_indexes[int(len(class_indexes)*i/k):int(len(class_indexes)*(i+1)/k)])
+        train_index[i].sort()
+        test_index[i].sort()
+
+    return folds_final
+
 download_punkt()
 download_rslp()
 download_stopwords()
