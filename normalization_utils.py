@@ -94,7 +94,7 @@ def build_bow():
     corpus, quant_true_news, quant_fake_news = get_news()
 
     print('Montando o BOW...')
-    X = cv.fit_transform(corpus).toarray()
+    X = cv.fit_transform(corpus)
     feature_names = cv.get_feature_names()
     Y = np.concatenate((np.zeros(quant_true_news, dtype=int), np.ones(quant_fake_news, dtype=int)), axis=None)
 
