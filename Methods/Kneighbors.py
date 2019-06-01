@@ -21,10 +21,8 @@ def knn(x, X, Y, K):
     y = np.argmax(np.bincount(Y[ind_viz]))
 
     classes, countClasses = np.unique(Y[ind_viz], return_counts=True)
-    print(classes)
-    print(np.argmax(countClasses))
 
-    return y, ind_viz
+    return y
 
 def testSamples(Xtrain, Ytrain, Xtest, K):
 
