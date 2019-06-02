@@ -11,9 +11,7 @@ from svmutil import svm_save_model
 def train(Xtrain, Ytrain, kernel, cost, gamma):
 
     if kernel == 0:
-        problem = svm_problem(Ytrain, Xtrain)
-        param = svm_parameter('-c %f -t %d -b 1' %(cost, kernel))
-        model = svm_train(problem, param)
+        model = svm_train(Ytrain, Xtrain, '-c %f -t %d' %(cost, kernel))
     else:
         model = svm_train(Ytrain, Xtrain, '-c %f -t %d -g %f' %(cost, kernel, gamma))
 
