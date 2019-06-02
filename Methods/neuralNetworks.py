@@ -47,6 +47,8 @@ def funcaoCusto(nn_params, Xtrain, Ytrain, vLambda):
 
     grad = np.concatenate([np.ravel(Theta1_grad), np.ravel(Theta2_grad)])
 
+    display(J)
+
     return J, grad
 
 def train(Xtrain, Ytrain, vLambda):
