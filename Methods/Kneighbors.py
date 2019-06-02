@@ -1,12 +1,12 @@
 import numpy as np
+import sklearn.metrics.pairwise
 
 def distance(x, X):
 
     m = X.shape[0]
     D = np.zeros(m)
 
-    for i in range(m):
-        D[i] = np.linalg.norm(X[i]-x)
+    D = sklearn.metrics.pairwise.pairwise_distances(X=X, Y=x, metric='euclidean')
 
     return D
 
@@ -15,7 +15,7 @@ def knn(x, X, Y, K):
     y = 0
     ind_viz = np.ones(K, dtype=int)
 
-    dist = distance(x, X)
+    dist = distance(x, X)[:,0]
     idx = np.argsort(dist, kind='mergesort')
     ind_viz = idx[0:K]
     y = np.argmax(np.bincount(Y[ind_viz]))
