@@ -226,6 +226,32 @@ def learning_curve(X, Y, Xval, Yval, train, prediction):
 
     plt.show()
 
+def get_U_and_S(X):
+    m, n = X.shape
+    U = np.zeros( [n,n] )
+    S = np.zeros( n )
+
+    sigma = X.transpose().dot(X).multiply(1 / m).toarray()
+
+    U, S = np.linalg.svd(sigma)[0:2]
+
+    return U, S
+
+def pca(X, K=0):
+    U, S = get_U_and_S(X)
+    if(K==0):
+        n = X.shape[1]
+        for k in range(n):
+            if S[0:k].sum() / S.sum() >= 0.95:
+                K = k
+                break
+
+    Z = np.zeros( [X.shape[0],K] )
+
+    Z = np.matmul(X, U[:, 0:K])
+
+    return Z
+
 
 download_punkt()
 download_rslp()
