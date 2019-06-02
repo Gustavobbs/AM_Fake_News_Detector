@@ -5,6 +5,7 @@ import nltk
 from nltk.stem import RSLPStemmer #Copyright (C) 2001-2019 NLTK Project
 from sklearn.feature_extraction.text import CountVectorizer
 import glob
+from scipy import sparse
 
 def download_punkt():
     try:
@@ -60,7 +61,7 @@ def sentence_to_features(sentence, feature_names):
     for token in tokenized_sentence:
         if token in feature_names:
             result[feature_names.index(token)] += 1
-    return result
+    return sparse.csr_matrix(result)
 
 def get_news():
     corpus = []
@@ -128,6 +129,103 @@ def stratified_kfolds(Y, k):
         test_index[i].sort()
 
     return folds_final
+
+def get_confusion_matrix(Y_test, Y_pred):
+    cm = np.zeros([2, 2], dtype=int)
+
+    for i in range(len(Y_pred)):
+        cm[int(Y_test[i]), int(Y_pred[i])] += 1
+
+    return cm
+
+def get_performance(Y_test, Y_pred):
+    confusion_matrix = get_confusion_matrix(Y_test, Y_pred)
+
+    quant_data = confusion_matrix.sum()
+    quant_classes = 2
+
+    vp=np.zeros(quant_classes)
+    vn=np.zeros(quant_classes)
+    fp=np.zeros(quant_classes)
+    fn=np.zeros(quant_classes)
+
+    revocacao = np.zeros( quant_classes )
+    revocacao_macroAverage = 0.0
+    revocacao_microAverage = 0.0
+
+    precisao = np.zeros( quant_classes )
+    precisao_macroAverage = 0.0
+    precisao_microAverage = 0.0
+
+    fmedida = np.zeros( quant_classes )
+    fmedida_macroAverage = 0.0
+    fmedida_microAverage = 0.0
+
+    for i in range(quant_classes):
+        vp[i] = confusion_matrix[i, i]
+        fp[i] = confusion_matrix[:, i].sum() - vp[i]
+        fn[i] = confusion_matrix[i].sum() - vp[i]
+        vn[i] = quant_data - vp[i] - fp[i] - fn[i]
+
+    acuracia = confusion_matrix.diagonal().sum() / quant_data
+
+    revocacao = vp / (vp + fn)
+    revocacao_macroAverage = revocacao.sum() / quant_classes
+    revocacao_microAverage = vp.sum() / (vp + fn).sum()
+
+    precisao = vp / (vp + fp)
+    precisao_macroAverage = precisao.sum() / quant_classes
+    precisao_microAverage = vp.sum() / (vp + fp).sum()
+
+    fmedida = 2 * ((precisao * revocacao) / (precisao + revocacao))
+    fmedida_macroAverage = 2 * ((precisao_macroAverage * revocacao_macroAverage) / (precisao_macroAverage + revocacao_macroAverage))
+    fmedida_microAverage = 2 * ((precisao_microAverage * revocacao_microAverage) / (precisao_microAverage + revocacao_microAverage))
+
+    resultados = {'revocacao': revocacao, 'acuracia': acuracia, 'precisao': precisao, 'fmedida':fmedida}
+    resultados.update({'revocacao_macroAverage':revocacao_macroAverage, 'precisao_macroAverage':precisao_macroAverage, 'fmedida_macroAverage':fmedida_macroAverage})
+    resultados.update({'revocacao_microAverage':revocacao_microAverage, 'precisao_microAverage':precisao_microAverage, 'fmedida_microAverage':fmedida_microAverage})
+    resultados.update({'confusionMatrix': matriz_confusao})
+
+    return resultados
+
+def learning_curve(X, Y, Xval, Yval, train, prediction):
+    perf_train = []
+    perf_val = []
+
+    for i in range(10, len(Y)):
+        train_result = train(X[0:i], Y[0:i])
+
+        Y_pred_train = prediction(X[0:i], train_result)
+        Y_pred_val = prediction(Xval, train_result)
+
+        Y_train_acc = get_performance(Y[0:i], Y_pred_train)['acuracia']
+        Y_val_acc = get_performance(Yval, Y_pred_val)['acuracia']
+
+        perf_train.append(Y_train_acc)
+        perf_val.append(Y_val_acc)
+
+    # Define o tamanho da figura
+    plt.figure(figsize=(20,12))
+
+    # Plota os dados
+    plt.plot(perf_train, color='blue', linestyle='-', linewidth=1.5, label='Treino')
+    plt.plot(perf_val, color='red', linestyle='-', linewidth=1.5, label='Validação')
+
+    # Define os nomes do eixo x e do eixo y
+    plt.xlabel(r'# Qtd. de dados de treinamento',fontsize='x-large')
+    plt.ylabel(r'Acuracia',fontsize='x-large')
+
+    # Define o título do gráfico
+    plt.title(r'Curva de aprendizado', fontsize='x-large')
+
+    # Acrescenta um grid no gráfico
+    plt.grid(axis='both')
+
+    # Plota a legenda
+    plt.legend()
+
+    plt.show()
+
 
 download_punkt()
 download_rslp()
