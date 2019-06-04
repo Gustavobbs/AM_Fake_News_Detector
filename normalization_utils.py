@@ -88,9 +88,9 @@ def get_news():
 
     return corpus, quant_true_news, quant_fake_news
 
-def get_feature_names(corpus):
+def get_feature_names(corpus, file_name='data/bow/feature_names.txt'):
     try:
-        feature_names = [line.rstrip('\n') for line in open('data/bow/feature_names.txt', 'r')]
+        feature_names = [line.rstrip('\n') for line in open(file_name, 'r')]
         return feature_names
     except IOError:
         feature_names = []
@@ -99,23 +99,23 @@ def get_feature_names(corpus):
             feature_names.extend(tokens)
             feature_names = list(set(feature_names))
 
-        f = open('data/bow/feature_names.txt', 'w')
+        f = open(file_name, 'w')
         for feature in feature_names:
             f.write("%s\n" % feature)
         f.close()
 
         return sorted(feature_names)
 
-def bow_matrix(corpus, feature_names):
+def bow_matrix(corpus, feature_names, file_name='data/bow/bow_matrix.npz'):
     try:
-        X = sparse.load_npz('data/bow/bow_matrix.npz')
+        X = sparse.load_npz(file_name)
         return X
     except IOError:
         X = sentence_to_features(corpus[0], feature_names)
         for i in range(1, len(corpus)):
             print('%d/%d' %(i, len(corpus)), end='\r', flush=True)
             X = sparse.vstack([X, sentence_to_features(corpus[i], feature_names)])
-        sparse.save_npz('data/bow/bow_matrix.npz', X)
+        sparse.save_npz(file_name, X)
         return X
 
 def get_classes(quant_true_news, quant_fake_news):
@@ -135,6 +135,33 @@ def build_bow():
 
     print('Montando a matriz...')
     X = bow_matrix(corpus, feature_names)
+
+    Y = get_classes(quant_true_news, quant_fake_news)
+
+    print('Quantidade de features:', len(feature_names))
+    print('10 primeiros valores de Y:', Y[0:10])
+    print('10 ultimos valores de Y:', Y[-10:])
+
+    return X, Y, feature_names
+
+def build_truncated_bow():
+    corpus_full_text, quant_true_news, quant_fake_news = get_news()
+
+    corpus = ['' for i in range(quant_true_news+quant_fake_news)]
+
+    for i in range(quant_true_news):
+        if len(corpus_full_text[i]) > len(corpus_full_text[quant_true_news+i]):
+            corpus[i] = corpus_full_text[i][:len(corpus_full_text[quant_true_news+i])]
+            corpus[quant_true_news+i] = corpus_full_text[quant_true_news+i]
+        else:
+            corpus[quant_true_news+i] = corpus_full_text[quant_true_news+i][:len(corpus_full_text[i])]
+            corpus[i] = corpus_full_text[i]
+
+    print('Montando o BOW...')
+    feature_names = get_feature_names(corpus, file_name='data/bow/feature_names_truncated.txt')
+
+    print('Montando a matriz...')
+    X = bow_matrix(corpus, feature_names, file_name='data/bow/bow_matrix_truncated.npz')
 
     Y = get_classes(quant_true_news, quant_fake_news)
 
