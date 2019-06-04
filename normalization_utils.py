@@ -118,7 +118,7 @@ def bow_matrix(corpus, feature_names):
         sparse.save_npz('data/bow/bow_matrix.npz', X)
         return X
 
-def get_classes():
+def get_classes(quant_true_news, quant_fake_news):
     try:
         Y = np.load('data/bow/bow_classes.npy')
         return Y
@@ -136,7 +136,7 @@ def build_bow():
     print('Montando a matriz...')
     X = bow_matrix(corpus, feature_names)
 
-    Y = get_classes()
+    Y = get_classes(quant_true_news, quant_fake_news)
 
     print('Quantidade de features:', len(feature_names))
     print('10 primeiros valores de Y:', Y[0:10])
