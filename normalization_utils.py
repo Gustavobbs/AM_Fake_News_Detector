@@ -184,7 +184,7 @@ def get_performance(Y_test, Y_pred):
     resultados = {'revocacao': revocacao, 'acuracia': acuracia, 'precisao': precisao, 'fmedida':fmedida}
     resultados.update({'revocacao_macroAverage':revocacao_macroAverage, 'precisao_macroAverage':precisao_macroAverage, 'fmedida_macroAverage':fmedida_macroAverage})
     resultados.update({'revocacao_microAverage':revocacao_microAverage, 'precisao_microAverage':precisao_microAverage, 'fmedida_microAverage':fmedida_microAverage})
-    resultados.update({'confusionMatrix': matriz_confusao})
+    resultados.update({'confusionMatrix': confusion_matrix})
 
     return resultados
 
