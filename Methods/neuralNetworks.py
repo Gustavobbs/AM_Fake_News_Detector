@@ -3,8 +3,9 @@ import pandas as pd
 import scipy
 import scipy.optimize
 from scipy import sparse
+import csv
 
-hidden_layer_size = 2
+hidden_layer_size = 500
 
 def sigmoid(z):
 
@@ -47,8 +48,6 @@ def funcaoCusto(nn_params, Xtrain, Ytrain, vLambda):
 
     grad = np.concatenate([np.ravel(Theta1_grad), np.ravel(Theta2_grad)])
 
-    display(J)
-
     return J, grad
 
 def train(Xtrain, Ytrain, vLambda):
@@ -89,6 +88,9 @@ def predict(Theta1, Theta2, Xtest):
 def neuralNetwork(Xtrain, Ytrain, Xtest, vLambda):
 
     Theta1, Theta2 = train(Xtrain, Ytrain, vLambda)
+
+    sparse.save_npz('Theta1.npz')
+    sparse.save_npz('Theta2.npz')
 
     Ypred = predict(Theta1, Theta2, Xtest)
 
