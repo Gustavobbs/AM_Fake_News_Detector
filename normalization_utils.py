@@ -3,7 +3,6 @@ import pandas as pd #importa a biblioteca usada para trabalhar com dataframes (d
 import re #Regexr
 import nltk
 from nltk.stem import RSLPStemmer #Copyright (C) 2001-2019 NLTK Project
-from sklearn.feature_extraction.text import CountVectorizer
 import glob
 from scipy import sparse
 
@@ -89,15 +88,55 @@ def get_news():
 
     return corpus, quant_true_news, quant_fake_news
 
-def build_bow():
-    cv = CountVectorizer(preprocessor=sentence_preprocessor, tokenizer=sentence_tokenizer)
+def get_feature_names(corpus):
+    try:
+        feature_names = [line.rstrip('\n') for line in open('data/bow/feature_names.txt', 'r')]
+        return feature_names
+    except IOError:
+        feature_names = []
+        for sentence in corpus:
+            tokens = sentence_tokenizer(sentence_preprocessor(sentence))
+            feature_names.extend(tokens)
+            feature_names = list(set(feature_names))
 
+        f = open('data/bow/feature_names.txt', 'w')
+        for feature in feature_names:
+            f.write("%s\n" % feature)
+        f.close()
+
+        return sorted(feature_names)
+
+def bow_matrix(corpus, feature_names):
+    try:
+        X = sparse.load_npz('data/bow/bow_matrix.npz')
+        return X
+    except IOError:
+        X = sentence_to_features(corpus[0], feature_names)
+        for i in range(1, len(corpus)):
+            print('%d/%d' %(i, len(corpus)), end='\r', flush=True)
+            X = sparse.vstack([X, sentence_to_features(corpus[i], feature_names)])
+        sparse.save_npz('data/bow/bow_matrix.npz', X)
+        return X
+
+def get_classes():
+    try:
+        Y = np.load('data/bow/bow_classes.npy')
+        return Y
+    except IOError:
+        Y = np.concatenate((np.zeros(quant_true_news, dtype=int), np.ones(quant_fake_news, dtype=int)), axis=None)
+        np.save('data/bow/bow_classes.npy', Y)
+        return Y
+
+def build_bow():
     corpus, quant_true_news, quant_fake_news = get_news()
 
     print('Montando o BOW...')
-    X = cv.fit_transform(corpus)
-    feature_names = cv.get_feature_names()
-    Y = np.concatenate((np.zeros(quant_true_news, dtype=int), np.ones(quant_fake_news, dtype=int)), axis=None)
+    feature_names = get_feature_names(corpus)
+
+    print('Montando a matriz...')
+    X = bow_matrix(corpus, feature_names)
+
+    Y = get_classes()
 
     print('Quantidade de features:', len(feature_names))
     print('10 primeiros valores de Y:', Y[0:10])
