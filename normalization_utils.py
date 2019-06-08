@@ -3,6 +3,7 @@ import pandas as pd #importa a biblioteca usada para trabalhar com dataframes (d
 import re #Regexr
 import nltk
 from nltk.stem import RSLPStemmer #Copyright (C) 2001-2019 NLTK Project
+from nltk.metrics import BigramAssocMeasures
 import glob
 from scipy import sparse
 
@@ -88,7 +89,7 @@ def get_news():
 
     return corpus, quant_true_news, quant_fake_news
 
-def get_feature_names(corpus, file_name='data/bow/feature_names.txt'):
+def get_feature_names(corpus, file_name='data/bow/common/feature_names.txt'):
     try:
         feature_names = [line.rstrip('\n') for line in open(file_name, 'r')]
         return feature_names
@@ -106,7 +107,7 @@ def get_feature_names(corpus, file_name='data/bow/feature_names.txt'):
 
         return sorted(feature_names)
 
-def bow_matrix(corpus, feature_names, file_name='data/bow/bow_matrix.npz'):
+def bow_matrix(corpus, feature_names, file_name='data/bow/common/bow_matrix.npz'):
     try:
         X = sparse.load_npz(file_name)
         return X
@@ -144,6 +145,97 @@ def build_bow():
 
     return X, Y, feature_names
 
+def doc_features(document, features_list):
+    features = []
+    for word in features_list:
+        features.append(1 if (word in document) else 0)
+    return features
+
+def build_reduced_bow_matrix(documents, reduced_bow_file_name):
+    try:
+        X = sparse.load_npz(reduced_bow_file_name)
+        return X
+    except IOError:
+        document_list = get_all_words(corpus)[1]
+        X = sparse.csr_matrix([doc_features(document, features_list) for document in document_list])
+        sparse.save_npz(X, reduced_bow_file_name)
+        return X
+
+def get_all_words(corpus):
+    all_words = []
+    document_list = []
+    for sentence in corpus:
+        tokens = sentence_tokenizer(sentence_preprocessor(sentence))
+        document_list.append(tokens)
+        all_words.extend(tokens)
+    return(all_words, document_list)
+
+def get_best_words(corpus, quant_true_news, quant, best_words_file_name, best_frequency_file_name):
+    try:
+        best_words = [line.rstrip('\n') for line in open(best_words_file_name, 'r')]
+        best_frequency = [tuple(line.rstrip('\n').split(',')) for line in open(best_frequency_file_name, 'r')]
+        return best_words, best_frequency
+    except IOError:
+        word_fd = nltk.probability.FreqDist()
+        label_word_fd = nltk.probability.ConditionalFreqDist()
+
+        all_words_true = get_all_words(corpus[:quant_true_news])[0]
+        all_words_fake = get_all_words(corpus[quant_true_news:])[0]
+
+        for word in all_words_true:
+            word_fd[word] += 1
+            label_word_fd['true'][word] += 1
+
+        for word in all_words_fake:
+            word_fd[word] += 1
+            label_word_fd['fake'][word] += 1
+
+        true_word_count = sum(label_word_fd['true'].values())
+        fake_word_count = sum(label_word_fd['fake'].values())
+        total_word_count = true_word_count + fake_word_count
+
+        word_scores = {}
+
+        for word, freq in word_fd.items():
+            true_score = BigramAssocMeasures.chi_sq(label_word_fd['true'][word],
+                (freq, true_word_count), total_word_count)
+            fake_score = BigramAssocMeasures.chi_sq(label_word_fd['fake'][word],
+                (freq, fake_word_count), total_word_count)
+            word_scores[word] = true_score + fake_score
+
+        best_frequency = sorted(word_scores.items(), key=lambda t: t[1], reverse=True)[:quant]
+        best_words = list(set([w for w, s in best_frequency]))
+
+        f = open(best_words_file_name, 'w')
+        q = open(best_frequency_file_name, 'w')
+        for word, frequency in zip(best_words, best_frequency):
+            f.write("%s\n" % word)
+            q.write("%s,%d\n" % (frequency[0], frequency[1]))
+        f.close()
+        q.close()
+        return best_words, best_frequency
+
+def build_reduced_bow(quant, best_words_file_name, best_frequency_file_name, reduced_bow_file_name, isBoolean):
+    corpus, quant_true_news, quant_fake_news = get_news()
+
+    features_list, frequency_list = get_best_words(corpus, quant_true_news, quant, best_words_file_name, best_frequency_file_name)
+
+    X = []
+
+    if isBoolean:
+        document_list = get_all_words(corpus)[1]
+        X = build_reduced_bow_matrix(documents, reduced_bow_file_name)
+    else:
+        X = bow_matrix(corpus, features_list, reduced_bow_file_name)
+
+    Y = get_classes(quant_true_news, quant_fake_news)
+
+    print('Quantidade de features:', len(features_list))
+    print('10 primeiros valores de Y:', Y[0:10])
+    print('10 ultimos valores de Y:', Y[-10:])
+
+    return X, Y, features_list, frequency_list
+
 def build_truncated_bow():
     corpus_full_text, quant_true_news, quant_fake_news = get_news()
 
@@ -158,10 +250,10 @@ def build_truncated_bow():
             corpus[i] = corpus_full_text[i]
 
     print('Montando o BOW...')
-    feature_names = get_feature_names(corpus, file_name='data/bow/feature_names_truncated.txt')
+    feature_names = get_feature_names(corpus, file_name='data/bow/truncated/feature_names_truncated.txt')
 
     print('Montando a matriz...')
-    X = bow_matrix(corpus, feature_names, file_name='data/bow/bow_matrix_truncated.npz')
+    X = bow_matrix(corpus, feature_names, file_name='data/bow/truncated/bow_matrix_truncated.npz')
 
     Y = get_classes(quant_true_news, quant_fake_news)
 
@@ -293,13 +385,9 @@ def learning_curve(X, Y, Xval, Yval, train, prediction):
     plt.show()
 
 def get_U_and_S(X):
-    m, n = X.shape
-    U = np.zeros( [n,n] )
-    S = np.zeros( n )
+    m = X.shape[0]
 
-    sigma = X.transpose().dot(X).multiply(1 / m).toarray()
-
-    U, S = np.linalg.svd(sigma)[0:2]
+    U, S = sparse.linalg.svds(sparse.csr_matrix(X, dtype=float), k=X.shape[0])[0:2]
 
     return U, S
 
@@ -314,7 +402,10 @@ def pca(X, K=0):
 
     Z = np.zeros( [X.shape[0],K] )
 
-    Z = np.matmul(X, U[:, 0:K])
+    print(X.shape)
+    print(U.shape)
+
+    Z = X.dot(U[:, 0:K])
 
     return Z
 
