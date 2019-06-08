@@ -6,6 +6,7 @@ from nltk.stem import RSLPStemmer #Copyright (C) 2001-2019 NLTK Project
 from nltk.metrics import BigramAssocMeasures
 import glob
 from scipy import sparse
+import matplotlib.pyplot as plt
 
 def download_punkt():
     try:
@@ -351,6 +352,8 @@ def learning_curve(X, Y, Xval, Yval, train, prediction):
     perf_val = []
 
     for i in range(10, len(Y)):
+        print('%d/%d' %(i, len(Y)), end='\r', flush=True)
+
         train_result = train(X[0:i], Y[0:i])
 
         Y_pred_train = prediction(X[0:i], train_result)

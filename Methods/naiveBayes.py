@@ -19,14 +19,17 @@ def train(Xtrain, Ytrain):
 
 def predict(x,pFake,pTrue,pAtrFake,pAtrTrue):
     classe = 0;
-    probFake= 1;
-    probTrue = 1;
+    probFake= 0;
+    probTrue = 0;
 
-    for i in range(x.shape[0]):
-        probFake = probFake * (pAtrFake[i] ** x[i])
-        probTrue = probTrue * (pAtrTrue[i] ** x[i])
-    probFake = pFake * probFake
-    probTrue = pTrue * probTrue
+    # for i in range(x.shape[0]):
+    #     probFake = probFake * (pAtrFake[i] ** x[i])
+    #     probTrue = probTrue * (pAtrTrue[i] ** x[i])
+    # probFake = pFake * probFake
+    # probTrue = pTrue * probTrue
+
+    probTrue = pTrue * (x*pAtrTrue + (1 - x)*(1 - pAtrTrue)).prod()
+    probFake = pFake * (x*pAtrFake + (1 - x)*(1 - pAtrFake)).prod()
     classe = 1 if probFake > probTrue else 0
 
     return classe, probFake, probTrue
@@ -37,7 +40,7 @@ def naiveBayes(Xtrain, Ytrain, Xtest):
 
     Ypred = np.zeros(0)
     for i in range(Xtest.shape[0]):
-        Ypredi, probFake, probTrue = predict(Xtest.getcol(i).toarray(), pFake, pTrue, pAtrFake, pAtrTrue)
+        Ypredi, probFake, probTrue = predict(Xtest.getrow(i).toarray(), pFake, pTrue, pAtrFake, pAtrTrue)
         Ypred = np.append(Ypred, Ypredi);
 
     return Ypred
