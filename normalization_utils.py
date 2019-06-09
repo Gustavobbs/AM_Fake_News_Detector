@@ -152,7 +152,7 @@ def doc_features(document, features_list):
         features.append(1 if (word in document) else 0)
     return features
 
-def build_reduced_bow_matrix(documents, reduced_bow_file_name):
+def build_reduced_bow_matrix(corpus, reduced_bow_file_name):
     try:
         X = sparse.load_npz(reduced_bow_file_name)
         return X
@@ -224,8 +224,7 @@ def build_reduced_bow(quant, best_words_file_name, best_frequency_file_name, red
     X = []
 
     if isBoolean:
-        document_list = get_all_words(corpus)[1]
-        X = build_reduced_bow_matrix(documents, reduced_bow_file_name)
+        X = build_reduced_bow_matrix(corpus, reduced_bow_file_name)
     else:
         X = bow_matrix(corpus, features_list, reduced_bow_file_name)
 
