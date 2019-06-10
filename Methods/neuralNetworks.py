@@ -5,7 +5,7 @@ import scipy.optimize
 from scipy import sparse
 import csv
 
-hidden_layer_size = 500
+hidden_layer_size = 50
 
 def sigmoid(z):
 
@@ -64,7 +64,6 @@ def train(Xtrain, Ytrain, vLambda):
 
     nn_params = result.x
 
-    # Obtem Theta1 e Theta2 back a partir de rna_params
     Theta1 = sparse.csr_matrix(np.reshape( nn_params[0:hidden_layer_size*(n + 1)], (hidden_layer_size, n+1) ))
     Theta2 = sparse.csr_matrix(np.reshape( nn_params[ hidden_layer_size*(n + 1):], (1, hidden_layer_size + 1) ))
 
@@ -88,9 +87,6 @@ def predict(Theta1, Theta2, Xtest):
 def neuralNetwork(Xtrain, Ytrain, Xtest, vLambda):
 
     Theta1, Theta2 = train(Xtrain, Ytrain, vLambda)
-
-    sparse.save_npz('Theta1.npz')
-    sparse.save_npz('Theta2.npz')
 
     Ypred = predict(Theta1, Theta2, Xtest)
 
