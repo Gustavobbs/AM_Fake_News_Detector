@@ -388,6 +388,46 @@ def learning_curve(X, Y, Xval, Yval, train, prediction):
 
     plt.show()
 
+def learning_curve_neural_networks(X, Y, Xval, Yval, vLambda, train, prediction):
+    perf_train = []
+    perf_val = []
+
+    for i in range(10, len(Y)):
+        print('%d/%d' %(i, len(Y)), end='\r', flush=True)
+
+        Theta1, Theta2 = train(X[0:i], Y[0:i], vLambda)
+
+        Y_pred_train = prediction(Theta1, Theta2, X[0:i])
+        Y_pred_val = prediction(Theta1, Theta2, Xval)
+
+        Y_train_acc = get_performance(Y[0:i], Y_pred_train)['acuracia']
+        Y_val_acc = get_performance(Yval, Y_pred_val)['acuracia']
+
+        perf_train.append(Y_train_acc)
+        perf_val.append(Y_val_acc)
+
+    # Define o tamanho da figura
+    plt.figure(figsize=(20,12))
+
+    # Plota os dados
+    plt.plot(perf_train, color='blue', linestyle='-', linewidth=1.5, label='Treino')
+    plt.plot(perf_val, color='red', linestyle='-', linewidth=1.5, label='Validação')
+
+    # Define os nomes do eixo x e do eixo y
+    plt.xlabel(r'# Qtd. de dados de treinamento',fontsize='x-large')
+    plt.ylabel(r'Acuracia',fontsize='x-large')
+
+    # Define o título do gráfico
+    plt.title(r'Curva de aprendizado', fontsize='x-large')
+
+    # Acrescenta um grid no gráfico
+    plt.grid(axis='both')
+
+    # Plota a legenda
+    plt.legend()
+
+    plt.show()
+
 def get_U_and_S(X):
     m = X.shape[0]
 
