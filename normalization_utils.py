@@ -384,6 +384,8 @@ def learning_curve(X, Y, Xval, Yval, train, prediction):
     # Plota a legenda
     plt.legend()
 
+    plt.savefig('output.png', bbox_inches='tight')
+
     plt.show()
 
 def get_U_and_S(X):
