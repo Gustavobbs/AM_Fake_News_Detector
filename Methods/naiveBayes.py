@@ -22,12 +22,6 @@ def predict(x,pFake,pTrue,pAtrFake,pAtrTrue):
     probFake= 0;
     probTrue = 0;
 
-    # for i in range(x.shape[0]):
-    #     probFake = probFake * (pAtrFake[i] ** x[i])
-    #     probTrue = probTrue * (pAtrTrue[i] ** x[i])
-    # probFake = pFake * probFake
-    # probTrue = pTrue * probTrue
-
     probTrue = pTrue * (x*pAtrTrue + (1 - x)*(1 - pAtrTrue)).prod()
     probFake = pFake * (x*pAtrFake + (1 - x)*(1 - pAtrFake)).prod()
     classe = 1 if probFake > probTrue else 0

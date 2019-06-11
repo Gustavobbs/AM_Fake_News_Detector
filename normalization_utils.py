@@ -236,33 +236,6 @@ def build_reduced_bow(quant, best_words_file_name, best_frequency_file_name, red
 
     return X, Y, features_list, frequency_list
 
-def build_truncated_bow():
-    corpus_full_text, quant_true_news, quant_fake_news = get_news()
-
-    corpus = ['' for i in range(quant_true_news+quant_fake_news)]
-
-    for i in range(quant_true_news):
-        if len(corpus_full_text[i]) > len(corpus_full_text[quant_true_news+i]):
-            corpus[i] = corpus_full_text[i][:len(corpus_full_text[quant_true_news+i])]
-            corpus[quant_true_news+i] = corpus_full_text[quant_true_news+i]
-        else:
-            corpus[quant_true_news+i] = corpus_full_text[quant_true_news+i][:len(corpus_full_text[i])]
-            corpus[i] = corpus_full_text[i]
-
-    print('Montando o BOW...')
-    feature_names = get_feature_names(corpus, file_name='data/bow/truncated/feature_names_truncated.txt')
-
-    print('Montando a matriz...')
-    X = bow_matrix(corpus, feature_names, file_name='data/bow/truncated/bow_matrix_truncated.npz')
-
-    Y = get_classes(quant_true_news, quant_fake_news)
-
-    print('Quantidade de features:', len(feature_names))
-    print('10 primeiros valores de Y:', Y[0:10])
-    print('10 ultimos valores de Y:', Y[-10:])
-
-    return X, Y, feature_names
-
 def stratified_kfolds(Y, k):
     train_index = []
     test_index = []
