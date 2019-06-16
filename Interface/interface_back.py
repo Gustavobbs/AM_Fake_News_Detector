@@ -12,10 +12,23 @@ class Server(BaseHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
 
     def do_HEAD(self):
         self._set_headers()
+
+    def do_GET(self):
+        if self.path!='/':
+            self.send_response(400)
+            self.end_headers()
+            return
+        f = open('interface.html')
+        self.send_response(200)
+        self.send_header('Content-type','text/html')
+        self.end_headers()
+        self.wfile.write(f.read().encode())
+        f.close()
 
     # POST echoes the message adding a JSON field
     def do_POST(self):
@@ -31,13 +44,13 @@ class Server(BaseHTTPRequestHandler):
         length = int(self.headers.get('content-length'))
         message = json.loads(self.rfile.read(length))
 
-        news = message['news']
+        news = message['news'].replace('\n', ' ')
 
         converted_news = sentence_to_features(news, feature_names)
 
-        prediction_array = predict(converted_news.toarray(), values[0][2], values[0][3], values[0][0], values[0][1])
+        prediction_array = predict(converted_news.toarray(), values[2], values[3], values[0], values[1])
 
-        prediction = 'true' if prediction_array[0] == 0 else 'false'
+        prediction = 'true' if prediction_array[0] == 0 else 'fake'
 
         return_message = {'prediction': prediction}
 

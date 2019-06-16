@@ -1,0 +1,42 @@
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
+        <script src="http://malsup.github.com/jquery.form.js"></script>
+
+        <script>
+            // wait for the DOM to be loaded
+            $(document).ready(function() {
+                $('#send').click(function(e){
+                    e.preventDefault();
+                    const newsVal = $("#news").val();
+                    const jsonObject = {
+                        news: newsVal,
+                    }
+                    $.ajax({
+                        contentType: 'application/json',
+                        data: JSON.stringify(jsonObject),
+                        processData: false,
+                        type: "POST",
+                        url: "/",
+                        dataType: "json",
+                        success: function(json){
+                            alert(`I think this is a ${json.prediction} news`);
+                        }
+                    });
+                });
+            });
+        </script>
+    </head>
+    <form id="form" method="post" role="form">
+
+        <legend>Fake news detector</legend>
+
+        <div class="form-group">
+            <label>News: </label>
+            <textarea class="form-control" name="news" id="news" rows="5" required></textarea>
+        </div>
+
+        <input id="send" class="btn btn-primary" type="submit" value="Send" data-loading-text="Sending..."/>
+
+    </form>
+</html>

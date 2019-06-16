@@ -8,6 +8,6 @@ X, Y, feature_names, frequency_list = build_reduced_bow(1000,
     'data/bow/reduced_binary/reduced_bow_1000.npz',
     True)
 
-returnValues = np.array([train(X, Y)])
+returnValues = np.array(train(X, Y))
 
 np.save('Interface/probabilities', returnValues)
